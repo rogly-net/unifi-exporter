@@ -1,0 +1,62 @@
+# Ignore node_modules and dependencies
+node_modules
+
+# Ignore logs
+logs
+*.log
+npm-debug.log*
+
+# Ignore environment variables
+.env
+
+# Ignore build outputs
+dist
+build
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore Git files
+.git
+.gitignore
+.github/
+
+# Ignore Docker files
+.dockerignore
+Dockerfile
+
+# Ignore IDE files
+*.swp
+*.swo
+*.idea
+*.vscode
+
+# Ignore temporary files
+*.tmp
+*.temp
+*.bak
+*.old
+
+# Ignore coverage reports
+coverage
+
+# Ignore test files
+*.test.js
+*.spec.js
+
+# Ignore Python virtual environment in src
+.venv/
+
+# ignore testing files
+testing/
+**/test.py
+
+# ignore deprecated files
+deprecated/
+
+# Ignore pycache files
+__pycache__/
+
+# Ignore Local Database
+database/

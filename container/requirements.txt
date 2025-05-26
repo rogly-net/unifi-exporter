@@ -1,0 +1,4 @@
+# Add any Python dependencies here
+pytz
+requests
+geoip2

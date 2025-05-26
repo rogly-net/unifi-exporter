@@ -1,0 +1,17 @@
+version: '3.9'
+services:
+  unifi-exporter:
+    image: ghcr.io/rogly-net/unifi-exporter:latest
+    container_name: unifi-exporter
+    restart: always
+    ports:
+      - "5514:5514/udp"
+    environment:
+      TZ: "America/Chicago"
+      LOG_LEVEL: "info"
+      LOKI_URL: "http://loki:3100"
+      GEOIP_ACCOUNT_ID: "your_geoip_account_id"
+      GEOIP_LICENSE_KEY: "your_geoip_license_key"
+    volumes:
+      - /path/to/your/config:/app/config
+      - /path/to/your/database:/app/database
