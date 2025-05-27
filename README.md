@@ -58,7 +58,7 @@ Configuration Maps stored in `/app/config` directory of the container:
 
 # Quick Start
 1. Launch the Docker Container
-``` bash
+```bash
 docker run -d \
   --name unifi-exporter \
   -e LOG_LEVEL=informational \                      # Log Level for Console
@@ -77,3 +77,13 @@ docker run -d \
 3. (Optional) Configure Control Plane Logs
     - Settings > Control Plane > Integrations > Activity Logging > SIEM Server
         - Set the IP and Port to the Container
+
+# Grafana Dashboards
+1. **Overview:** `dashboards/logs-unifi-overview.json`
+![alt text](screenshots/logs-unifi-overview.png "UniFi Logs Overview")
+
+2. **Flows Overview:** `dashboards/logs-unifi-flows-overview.json`
+![alt text](screenshots/logs-unifi-flows-overview.png "UniFi Flows Overview")
+
+3. **Flows Investigate:** `dashboards/logs-unifi-flows-investigate.json`
+![alt text](screenshots/logs-unifi-flows-investigate.png "UniFi Flows Investigate")
