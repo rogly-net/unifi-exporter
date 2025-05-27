@@ -9,14 +9,24 @@ class Syslog:
     including generic and flow log types. It extracts relevant fields,
     applies mappings, enriches with geo and DNS data, and prepares records
     and labels for export.
+
+    Attributes:
+        core (Core): Core utilities for logging, extraction, and mapping.
+        map (Map): Mapping utility for translating keys and values.
+        loki (LokiExporter): Exporter for sending logs to Loki.
+        geo (GeoIP): GeoIP utility for IP address enrichment.
+        record (dict): Dictionary to store parsed record fields.
+        labels (dict): Dictionary to store parsed label fields.
     """
 
     def __init__(self):
         """
-        Initializes the Syslog class and its core components.
+        Initializes the Syslog class and its components.
 
-        Sets up core utilities, mapping, exporter, geo lookup, and initializes
-        empty record and label dictionaries for parsing syslog messages.
+        This constructor sets up the core utilities, mapping tools, log exporter,
+        and geo lookup functionality. It also initializes empty dictionaries
+        for storing parsed record and label data, which are used during the
+        processing of syslog messages.
         """
         self.core = core.Core()
         self.map = core.Map()
@@ -29,30 +39,38 @@ class Syslog:
         """
         Represents a parsed Syslog log entry.
 
-        Stores the extracted record fields and labels for a single Syslog message.
-        Used as a container for parsed data to be exported or further processed.
+        This class acts as a container for the extracted record fields and labels
+        from a single Syslog message. It is used to encapsulate the parsed data
+        for further processing or exporting to external systems.
         """
         def __init__(self, record: dict, labels: dict):
             """
-            Initializes the Log class with parsed record and label data.
+            Initializes the Log class.
+
+            This constructor sets up the Log instance with the parsed record fields
+            and associated labels extracted from a Syslog message.
 
             Args:
-                record (dict): The parsed fields from the Syslog message.
-                labels (dict): The labels associated with the parsed fields.
+                record (dict): A dictionary containing the parsed fields from the Syslog message.
+                labels (dict): A dictionary containing the labels associated with the parsed fields.
             """
             self.record = record
             self.labels = labels
 
     def generic(self, message: str) -> Log:
         """
-        Parses a generic Syslog message.
+        Parses a generic Syslog message, extracting relevant fields and labels.
+
+        This method processes a generic Syslog message, extracting key information
+        such as service name, service ID, and message content. It assigns appropriate
+        labels and records based on the parsed data and returns a Log object.
 
         Args:
             message (str): The Syslog message to parse.
 
         Returns:
             Log: An instance of the Log class containing the parsed record and labels,
-             or None if parsing fails.
+            or None if parsing fails.
         """
         self.core.logger("debug", "syslog", "generic", f"Parsing generic syslog message: {message}")
         
@@ -107,8 +125,9 @@ class Syslog:
         """
         Parses a Syslog flow log message, extracting and enriching flow-specific fields.
 
-        This method determines if the message is a portforward or general flow log,
-        parses relevant fields, enriches with geo and DNS data, and returns a Log object.
+        This method identifies whether the message pertains to a portforward or general flow log.
+        It extracts relevant fields, enriches data with geo and DNS information, and assigns
+        appropriate labels and records. The parsed data is encapsulated in a Log object.
 
         Args:
             message (str): The Syslog message to parse.
@@ -124,17 +143,19 @@ class Syslog:
 
         def common(message: str) -> Syslog.Log:
             """
-            Parses and enriches common flow log fields from a Syslog message.
+            Extracts and enriches common flow log fields from a Syslog message.
 
-            This function extracts TCP flags, key-value pairs, and enriches
-            IP addresses with geo and DNS data. It also assigns label fields
-            and handles MAC address splitting for source and destination.
+            This function processes a Syslog message to extract TCP flags, 
+            key-value pairs, and enrich IP addresses with geo and DNS data. 
+            It also assigns label fields, maps keys to enriched keys, and 
+            handles MAC address splitting for source and destination.
 
             Args:
-                message (str): The Syslog message to parse.
+                message (str): The Syslog message to be parsed and enriched.
 
             Returns:
-                Syslog.Log: Parsed log object with record and label data, or None if parsing fails.
+                Log: An instance of the Log class containing the parsed 
+                record and label data, or None if parsing fails.
             """
             # Create an empty list for TCP Flags
             tcp = []
@@ -271,14 +292,17 @@ class Syslog:
             """
             Parses portforward-specific flow log fields from a Syslog message.
 
-            Extracts portforward stage, type, ID, and rule name, then delegates
-            further parsing to the common flow log parser.
+            This function extracts details such as portforward stage, type, ID, 
+            and rule name from the Syslog message. It assigns these details to 
+            appropriate labels and delegates further parsing to the common flow 
+            log parser for additional processing and enrichment.
 
             Args:
                 message (str): The Syslog message to parse.
 
             Returns:
-                Syslog.Log: Parsed log object with record and label data, or None if parsing fails.
+                Log: An instance of the Log class containing the parsed 
+                record and label data, or None if parsing fails.
             """
             self.labels["type"] = "portforward"
             # Parse PortForward Details - [PREROUTING-DNAT-4]
@@ -305,16 +329,18 @@ class Syslog:
 
         def general(message: str) -> Syslog.Log:
             """
-            Parses general (non-portforward) flow log fields from a Syslog message.
+            Parses general flow log fields from a Syslog message.
 
-            Extracts source and destination zones, determines the action (permit, deny, or unknown)
-            based on the description, and delegates further parsing to the common flow log parser.
+            This method extracts source and destination zones from the message, determines the 
+            action (permit, deny, or unknown) based on the description, and delegates further 
+            parsing to the common flow log parser for additional processing and enrichment.
 
             Args:
                 message (str): The Syslog message to parse.
 
             Returns:
-                Syslog.Log: Parsed log object with record and label data, or None if parsing fails.
+                Syslog.Log: An instance of the Log class containing the parsed record and label 
+                data, or None if parsing fails.
             """
             self.labels["type"] = "flow"
             zone_info = self.core.extract(message, r"^\[(\w+)\S+\]", 1)
@@ -352,15 +378,19 @@ class Syslog:
         """
         Parses a Syslog message and exports the parsed data.
 
-        This method extracts priority, facility, severity, timestamp, and hostname from the message.
-        It determines whether the message is a flow log or a generic log, parses accordingly,
-        and exports the resulting record and labels using the Loki exporter.
+        This method processes a Syslog message to extract key components such as priority, 
+        facility, severity, timestamp, and hostname. Based on the presence of specific 
+        fields, it determines whether the message is a flow log or a generic log. It then 
+        delegates parsing to the appropriate method and exports the resulting record and 
+        labels using the Loki exporter.
 
         Args:
             message (str): The Syslog message to parse.
+            cached_ip (str): A cached IP address used for optimization during export.
 
         Returns:
-            bool: True if the message was successfully parsed and exported, False otherwise.
+            tuple: A tuple containing the updated cached IP address and a boolean indicating 
+            whether the message was successfully parsed and exported.
         """
         self.core.logger("debug", "syslog", "parse", f"Starting to parse syslog message: {message}")
 

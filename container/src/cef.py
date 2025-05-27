@@ -5,23 +5,26 @@ class Cef:
     """
     Handles Common Event Format (CEF) messages.
 
-    This class provides methods to map fields, parse messages, and export
-    parsed data to Loki.
+    This class provides utilities for parsing CEF messages, mapping fields, 
+    and exporting the parsed data to Loki. It includes methods for extracting 
+    and validating CEF fields, converting severity levels, and handling syslog 
+    headers.
 
     Attributes:
-        core (Core): Logging and regex utility instance.
-        map (Map): Field mapping utility.
-        loki (LokiExporter): Loki exporter instance.
-        record (dict): Parsed record container.
-        labels (dict): Parsed labels container.
+        core (Core): Utility instance for logging and regex operations.
+        map (Map): Utility for mapping CEF fields and severity levels.
+        loki (LokiExporter): Instance for exporting parsed data to Loki.
+        record (dict): Container for storing parsed field values.
+        labels (dict): Container for storing parsed label key-value pairs.
     """
 
     def __init__(self):
         """
         Initializes the Cef class.
 
-        Initializes the core utilities, field mapping, Loki exporter, and
-        containers for parsed data.
+        This constructor sets up the core utilities for logging and regex operations,
+        initializes the field mapping and Loki exporter instances, and prepares
+        containers for storing parsed field values and labels.
         """
         self.core = core.Core()
         self.map = core.Map()
@@ -31,36 +34,53 @@ class Cef:
 
     class Fields:
         """
-        Container for parsed fields and corresponding labels.
+        Represents a container for parsed CEF fields and their corresponding labels.
+
+        This inner class is used to encapsulate the extracted field values and 
+        label key-value pairs after parsing a CEF message.
 
         Attributes:
-            record (dict): Extracted field values.
-            labels (dict): Label key-value pairs.
+            record (dict): A dictionary containing the extracted field values 
+            from the CEF message.
+            labels (dict): A dictionary containing the label key-value pairs 
+            derived from the CEF message headers.
         """
 
         def __init__(self, record: dict = None, labels: dict = None):
             """
             Initializes the Fields class.
 
+            This constructor sets up the Fields class with the provided record
+            and labels dictionaries, which store the extracted field values
+            and label key-value pairs from a parsed CEF message.
+
             Args:
-                record (dict, optional): Extracted field values. Defaults to None.
-                labels (dict, optional): Label key-value pairs. Defaults to None.
+                record (dict, optional): A dictionary containing the extracted 
+                field values from the CEF message. Defaults to None.
+                labels (dict, optional): A dictionary containing the label 
+                key-value pairs derived from the CEF message headers. Defaults to None.
             """
             self.record = record
             self.labels = labels
     
     def fields(self, message: str, record: dict, labels: dict) -> Fields:
         """
-        Parses a CEF message into fields and extracts the message text.
+        Parses a CEF message into structured fields and labels.
+
+        This method processes a raw CEF message, splitting it into its 
+        constituent parts, mapping the fields to predefined labels, and 
+        extracting the message body. It also validates the message format 
+        and converts severity levels to human-readable formats.
 
         Args:
-            message (str): The CEF message to parse.
-            record (dict): The dictionary to store parsed field values.
-            labels (dict): The dictionary to store parsed label key-value pairs.
+            message (str): The raw CEF message to parse.
+            record (dict): A dictionary to store the extracted field values.
+            labels (dict): A dictionary to store the extracted label key-value pairs.
 
         Returns:
-            Fields: An instance of the Fields class containing parsed fields
-            and labels, or None if parsing fails.
+            Fields: An instance of the Fields class containing the parsed 
+            fields and labels, or None if parsing fails due to an invalid 
+            message format or missing fields.
         """
         self.core.logger("debug", "cef", "fields", f"Parsing CEF message: {message}")
         
@@ -115,17 +135,19 @@ class Cef:
 
     def parse(self, message: str, cached_ip: str) -> tuple:
         """
-        Parses a full syslog+CEF message and exports it to Loki.
+        Parses a syslog+CEF message and exports it to Loki.
 
-        This method extracts the timestamp and hostname from the syslog header,
-        parses the CEF fields, and exports the parsed data to Loki.
+        This method processes a raw syslog+CEF message by extracting the 
+        timestamp and hostname from the syslog header, parsing the CEF fields 
+        into structured data, and exporting the parsed information to Loki.
 
         Args:
-            message (str): The raw syslog+CEF message to parse.
+            message (str): The raw syslog+CEF message to be processed.
+            cached_ip (str): The cached IP address used for exporting data.
 
         Returns:
-            bool: True if the message was successfully exported to Loki,
-            False otherwise.
+            tuple: A tuple containing the updated cached IP address and a 
+            boolean indicating whether the export to Loki was successful.
         """
         self.labels["type"] = "cef"
         self.core.logger("debug", "cef", "parse", f"Starting to parse message: {message}")

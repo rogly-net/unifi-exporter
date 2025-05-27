@@ -14,15 +14,26 @@ import geoip2.database
 class Core:
     """
     Core class for the application.
-    This class provides core utilities such as logging, environment variable checks,
-    signal handling, and data extraction.
-    It also includes helper methods for managing application state and handling errors.
+
+    This class provides essential utilities and functionality for the application, including:
+    - Logging with customizable log levels and thread identification.
+    - Environment variable validation to ensure required variables are set.
+    - Signal handling for graceful application shutdown (e.g., SIGTERM).
+    - Data extraction using regular expressions with support for cleaned messages.
+    - Application state management through a stop flag for controlled termination.
+    - Error handling and reporting to assist in debugging and operational stability.
+
+    It serves as a foundational component for building robust and maintainable applications.
     """
     def __init__(self):
         """
-        Initializes the Core class with default attributes.
-        Sets up metadata such as name, version, description, author, and email.
-        Also initializes a stop flag for application control.
+        Initializes the Core class.
+
+        This constructor sets up the default attributes for the Core class, including:
+        - Metadata such as name, version, description, author, and email.
+        - A stop flag to manage application termination gracefully.
+
+        It serves as the foundational setup for the Core utilities.
         """
         self._name = "CoreUtilities"
         self._version = "1.0.0"
@@ -33,18 +44,23 @@ class Core:
 
     class Extracted:
         """
-        Class to represent extracted data from a message.
-        This class encapsulates the extracted value, the original message, 
-        and the cleaned message after extraction.
+        Represents data extracted from a message.
+
+        This class encapsulates:
+        - `value`: The extracted value from the message.
+        - `original`: The original message from which the value was extracted.
+        - `cleaned`: The message after the extracted value has been removed.
+
+        It provides a structured way to handle and represent extracted data.
         """
         def __init__(self, value: str = None, original: str = None, cleaned: str = None):
             """
-            Initializes the Extracted class.
+            Initializes an instance of the Extracted class.
 
             Args:
-                value (str, optional): The extracted value. Defaults to None.
+                value (str, optional): The value extracted from the message. Defaults to None.
                 original (str, optional): The original message from which the value was extracted. Defaults to None.
-                cleaned (str, optional): The cleaned message after extraction. Defaults to None.
+                cleaned (str, optional): The message after the extracted value has been removed. Defaults to None.
             """
             self.value = value
             self.original = original
@@ -52,8 +68,10 @@ class Core:
         def __str__(self):
             """
             Returns:
-                str: A string representation of the Extracted object, including the extracted value,
-                the original message, and the cleaned message.
+                str: A string representation of the Extracted object. This includes:
+                - The extracted value (`value`).
+                - The original message (`original`).
+                - The cleaned message (`cleaned`), which is the original message with the extracted value removed.
             """
             return f"Extracted(value={self.value}, original={self.original}, cleaned={self.cleaned})"
 
@@ -61,14 +79,20 @@ class Core:
         """
         Logs a message with the specified level, program, function, and message.
 
+        This method formats the log message with a timestamp, thread name, and 
+        the provided details, and prints it to the console. It respects the 
+        log level set in the environment variable `LOG_LEVEL` to filter messages.
+
         Args:
-            level (str): The log level (e.g., "informational", "ERROR").
-            program (str): The name of the program.
-            function (str): The name of the function.
-            message (str): The log message.
+            level (str): The log level (e.g., "informational", "ERROR"). 
+                 Supported levels are "debug", "informational", "warning", 
+                 "error", and "critical".
+            program (str): The name of the program or module generating the log.
+            function (str): The name of the function generating the log.
+            message (str): The log message to be recorded.
 
         Returns:
-            None
+            None: This method does not return a value.
         """
         try:
             level = level.lower()
@@ -93,13 +117,17 @@ class Core:
 
     def environment(self, env_vars: list) -> bool:
         """
-        Checks if the required environment variables are set in the operating system's environment.
+        Validates the presence of required environment variables.
+
+        This method checks if all the specified environment variables are set
+        in the operating system's environment. If any variable is missing, it
+        logs a critical error and terminates the application.
 
         Args:
             env_vars (list): A list of strings representing the names of the required environment variables.
 
         Returns:
-            bool: Returns True if all required environment variables are set.
+            bool: Returns True if all required environment variables are set, otherwise exits the application.
         """
         for var in env_vars:
             if var not in os.environ:
@@ -111,6 +139,10 @@ class Core:
     def sigterm(self, signum: int, frame: FrameType) -> None:
         """
         Handles the SIGTERM signal to gracefully shut down the application.
+
+        This method is triggered when the application receives a SIGTERM signal,
+        allowing it to perform cleanup tasks and set the stop flag to indicate
+        that the application should terminate.
 
         Args:
             signum (int): The signal number received (e.g., SIGTERM).
@@ -127,17 +159,23 @@ class Core:
         """
         Extracts a value from a message using the provided regex pattern.
 
+        This method searches the input message for a match to the given regular
+        expression pattern. If a match is found, it extracts the specified capture
+        group, removes the matched text from the original message, and returns
+        an Extracted object containing the extracted value, the original message,
+        and the cleaned message.
+
         Args:
             message (str): The input text to search.
             regex (str): The regular expression pattern to match.
             group (int, optional): The capture group index to extract. Defaults to 0.
 
         Returns:
-            Optional[Core.Extracted]: An Extracted object containing:
-            - value (str): The matched substring.
-            - original (str): The original message.
-            - cleaned (str): The message with the matched text removed.
-            None if no match is found.
+            Extracted: An Extracted object containing:
+            - value (str): The matched substring, or None if no match is found.
+            - original (str): The original input message.
+            - cleaned (str): The message with the matched text removed, or the
+              original message if no match is found.
         """
         try:
             match = re.search(regex, message)
@@ -153,43 +191,48 @@ class Core:
 
 class Map:
     """
-    Map utilities for converting numeric and coded values into human-readable formats.
+    Map utilities for translating numeric and coded values into human-readable formats.
 
-    Provides methods to:
-        - priority(priority: str) -> Priority
-            Map a syslog priority number to its facility and severity components.
-        - severity(type: str, severity: int) -> str
-            Map a syslog or CEF severity level to its textual description.
-        - facility(facility: int) -> str
-            Map a syslog facility code to its name.
-        - protocol(protocol: int) -> str
+    This class provides methods to:
+        - priority(priority: str) -> Priority:
+            Convert a syslog priority number into its facility and severity components.
+        - severity(type: str, severity: int) -> str:
+            Translate a syslog or CEF severity level into a textual description.
+        - facility(facility: int) -> str:
+            Translate a syslog facility code into its corresponding name.
+        - protocol(protocol: int) -> str:
             Map an IP protocol number to its protocol name.
-        - cef(field: int) -> str
-            Map a CEF field index to the corresponding syslog field name.
-        - ip(ip: str) -> str
-            Resolve an IP address to its hostname, or return the IP if resolution fails.
-        - flow(flow: str) -> str
-            Map a flow type identifier to its descriptive name.
-        - portforward(rule: str) -> str
+        - cef(field: int) -> str:
+            Map a CEF field index to its corresponding field name.
+        - ip(ip: str) -> str:
+            Resolve an IP address to its hostname via reverse DNS lookup, or return the IP if resolution fails.
+        - flow(flow: str) -> str:
+            Translate a flow type identifier into a descriptive name.
+        - portforward(rule: str) -> str:
             Map a port forwarding rule string to a human-readable rule name.
 
-    Each method reads from its respective JSON configuration file under `config/`
-    and returns the mapped value or "unknown" if no match is found.
+    Each method reads from its respective JSON configuration file under the `config/` directory.
+    If a mapping is not found, the method returns "unknown" or the original input value.
     """
     def __init__(self):
         """
         Initializes the Map class.
-        Loads mapping configurations from JSON files in the 'config' directory and
-        prepares them for value-to-string translation.
 
-        JSON files included:
-          - syslog_severity.json
-          - cef_severity.json
-          - facilities.json
-          - ip_protocols.json
-          - cef_fields.json
-          - flow_fields.json
-          - portforward_rules.json
+        This constructor sets up the Map class by loading various mapping configurations
+        from JSON files located in the 'config' directory. These mappings are used to
+        translate numeric or coded values into human-readable formats.
+
+        The following JSON files are validated and loaded:
+          - syslog_severity.json: Maps syslog severity levels to descriptive labels.
+          - cef_severity.json: Maps CEF severity levels to descriptive labels.
+          - facilities.json: Maps syslog facility codes to descriptive labels.
+          - ip_protocols.json: Maps IP protocol numbers to protocol names.
+          - cef_fields.json: Maps CEF field indices to field names.
+          - flow_fields.json: Maps flow type identifiers to descriptive names.
+          - portforward_rules.json: Maps port forwarding rule strings to human-readable names.
+
+        If any of these files or the 'config' directory is missing, the application
+        logs a critical error and terminates.
         """
         self._name = "Maps"
         self._version = "1.0.0"
@@ -228,36 +271,52 @@ class Map:
         Represents a syslog priority, encapsulating its
         facility and severity components.
 
+        This class provides a structured representation of a syslog priority,
+        which is a combination of a facility code and a severity level.
+
         Attributes:
-            facility (int): The syslog facility code (0-23).
-            severity (int): The syslog severity level (0-7).
+            facility (int): The syslog facility code, representing the source
+            of the log message (e.g., kernel, user-level, mail system).
+            severity (int): The syslog severity level, indicating the importance
+            or urgency of the log message (e.g., debug, informational, critical).
         """
         def __init__(self, facility: int, severity: int):
             """
-            Initialize a Priority object representing a syslog priority.
+            Initializes a Priority object representing a syslog priority.
 
             Args:
-                facility (int): The syslog facility code (0–23).
-                severity (int): The syslog severity level (0–7).
+                facility (int): The syslog facility code, indicating the source of the log message 
+                                (e.g., kernel, user-level, mail system). Valid range: 0–23.
+                severity (int): The syslog severity level, indicating the importance or urgency of 
+                                the log message (e.g., debug, informational, critical). Valid range: 0–7.
             """
             self.facility = facility
             self.severity = severity
 
         def __repr__(self):
             """
-            Return the canonical string representation of this Priority instance.
+            Returns:
+                str: A string representation of the Priority instance, 
+                including its facility and severity components.
             """
             return f"Priority(facility={self.facility}, severity={self.severity})"
 
     def priority(self, priority: str) -> Priority:
         """
-        Converts a syslog priority value to its facility and severity components.
+        Converts a syslog priority value into its facility and severity components.
+
+        The syslog priority is a single numeric value that encodes both the facility
+        (source of the log message) and the severity (importance level) of the log.
+        This method decodes the priority into its constituent parts.
 
         Args:
-            priority (str): The numeric syslog priority (as a string or integer).
+            priority (str): The numeric syslog priority as a string or integer.
+                    The value should be between 0 and 191, inclusive.
 
         Returns:
-            Priority: An object with `facility` and `severity` attributes.
+            Priority: An instance of the Priority class containing:
+                  - `facility` (int): The facility code (0–23).
+                  - `severity` (int): The severity level (0–7).
         """
         facility = int(priority) // 8
         severity = int(priority) % 8
@@ -267,17 +326,17 @@ class Map:
         """
         Translate a numeric severity code to its human-readable label.
 
-        Loads mapping data from JSON files in the 'config' directory:
-          - 'config/syslog_severity.json' for syslog severity codes
-          - 'config/cef_severity.json' for CEF severity levels
+        This method supports two types of severity mappings:
+          - "syslog": Maps syslog severity levels to descriptive labels using 'config/syslog_severity.json'.
+          - "cef": Maps Common Event Format (CEF) severity levels to descriptive labels using 'config/cef_severity.json'.
 
         Args:
             type (str): The mapping type, either "syslog" or "cef".
             severity (int): The numeric severity value to translate.
 
         Returns:
-            str: The corresponding severity description, or "unknown" if the value
-             or mapping type is not found.
+            str: The corresponding severity description if found, or "unknown" if the value
+             or mapping type is not recognized or not found in the configuration files.
         """
         # Load the syslog severity mappings from a JSON file
         try: 
@@ -316,15 +375,19 @@ class Map:
         
     def facility(self, facility: int) -> str:
         """
-        Translate a numeric syslog facility code to its human-readable name.
+        Converts a numeric syslog facility code into a descriptive name.
 
-        Loads mapping data from 'config/facilities.json'.
+        This method reads the mapping data from the 'config/facilities.json' file
+        to translate the facility code into a human-readable format. If the facility
+        code is not found in the mapping, it returns "unknown".
 
         Args:
-            facility (int): The numeric syslog facility code.
+            facility (int): The numeric syslog facility code, representing the source
+                    of the log message (e.g., kernel, user-level, mail system).
 
         Returns:
-            str: The corresponding facility name, or "unknown" if not found.
+            str: The descriptive name of the facility, or "unknown" if the code is not
+             found in the mapping file.
         """
         # Load the facility mappings from a JSON file
         try:
@@ -344,15 +407,18 @@ class Map:
 
     def protocol(self, protocol: int) -> str:
         """
-        Translate a numeric IP protocol number to its human-readable name.
+        Maps a numeric IP protocol number to its corresponding human-readable name.
 
-        Loads mapping data from 'config/ip_protocols.json'.
+        This method reads the mapping data from the 'config/ip_protocols.json' file
+        to translate the protocol number into a descriptive name. If the protocol
+        number is not found in the mapping, it returns the original protocol number.
 
         Args:
-            protocol (int): The numeric IP protocol number.
+            protocol (int): The numeric IP protocol number to map.
 
         Returns:
-            str: The corresponding protocol name, or "unknown" if not found.
+            str: The descriptive name of the protocol, or the original protocol number
+             if no mapping is found.
         """
         # Load the protocol mappings from a JSON file
         try:
@@ -372,15 +438,18 @@ class Map:
     
     def cef(self, field: int) -> str:
         """
-        Translate a numeric CEF extension field index to its human-readable name.
+        Maps a numeric CEF (Common Event Format) extension field index to its descriptive name.
 
-        Loads mapping data from 'config/cef_fields.json'.
+        This method reads the mapping data from the 'config/cef_fields.json' file to translate
+        the provided field index into a human-readable name. If the field index is not found
+        in the mapping, it returns "unknown".
 
         Args:
-            field (int): The numeric CEF extension field index.
+            field (int): The numeric index of the CEF extension field to map.
 
         Returns:
-            str: The corresponding field name, or "unknown" if not found.
+            str: The descriptive name of the CEF field, or "unknown" if the index is not found
+             in the mapping file.
         """
         # Load the CEF field mappings from a JSON file
         try:
@@ -402,16 +471,17 @@ class Map:
         """
         Resolve an IP address to a hostname via reverse DNS lookup.
 
-        Attempts to perform a reverse DNS lookup on the given IP. If the lookup
-        succeeds, returns the corresponding hostname; otherwise, returns the
-        original IP address.
+        This method attempts to resolve the given IP address to its corresponding
+        hostname using reverse DNS lookup. If the resolution is successful, the
+        hostname is returned. If the resolution fails or an error occurs, the
+        original IP address is returned instead.
 
         Args:
             ip (str): The IP address to resolve.
 
         Returns:
-            str: The resolved hostname on success, or the input IP string if
-             resolution fails.
+            str: The resolved hostname if successful, or the original IP address
+            if the resolution fails or an error occurs.
         """
         try:
             hostname = socket.gethostbyaddr(ip)[0]
@@ -424,17 +494,18 @@ class Map:
         
     def flow(self, flow: str) -> str:
         """
-        Translate a flow identifier to its descriptive name.
+        Maps a flow type identifier to a descriptive name.
 
-        Loads mapping data from 'config/flow_fields.json'. If the flow code exists
-        in the configuration, returns its human-readable description. Otherwise,
-        returns the original flow string.
+        This method reads the mapping data from the 'config/flow_fields.json' file
+        to translate the provided flow identifier into a human-readable name. If the
+        flow identifier is not found in the mapping, it returns the original flow string.
 
         Args:
-            flow (str): The flow type identifier to map.
+            flow (str): The flow type identifier to be translated.
 
         Returns:
-            str: The mapped flow name, or the original flow string if no mapping is found.
+            str: The descriptive name of the flow type if found, or the original flow
+            string if no mapping exists in the configuration file.
         """
         # Load the flow mappings from a JSON file
         try:
@@ -454,17 +525,19 @@ class Map:
 
     def portforward(self, rule: str) -> str:
         """
-        Translate a port-forwarding rule string into a human-readable name.
+        Converts a port-forwarding rule string into a human-readable description.
 
-        Attempts to match the given rule text against entries in
-        'config/portforward_rules.json'. Returns the mapped description
-        if a matching key is found, otherwise returns "unknown".
+        This method attempts to match the provided rule string against the keys
+        in the 'config/portforward_rules.json' file. If a match is found, it
+        returns the corresponding descriptive name. If no match is found, it
+        defaults to returning "unknown".
 
         Args:
-            rule (str): The raw port forwarding rule identifier or text.
+            rule (str): The raw port forwarding rule string to be translated.
 
         Returns:
-            str: The corresponding human-readable rule name, or "unknown" if no mapping exists.
+            str: A human-readable description of the port forwarding rule, or
+             "unknown" if no matching entry exists in the configuration file.
         """
         # Load the port forwarding mappings from a JSON file
         try:
@@ -488,39 +561,46 @@ class Map:
 
 class LokiExporter:
     """
-    LokiExporter handles sending log records to a Loki instance.
+    LokiExporter facilitates sending log records to a Loki instance.
 
-    This class constructs the necessary JSON payload, verifies connectivity
-    to the configured Loki endpoint, and posts logs.
+    This class provides methods to construct the required JSON payload, 
+    verify connectivity to the configured Loki endpoint, and export logs 
+    with optional retry mechanisms and DNS caching.
 
     Attributes:
-        _name (str): Exporter name.
-        _version (str): Exporter version.
-        _description (str): Exporter description.
-        _author (str): Author name.
-        _email (str): Author email.
-        url (str): Loki push API URL (e.g., http://host:3100/loki/api/v1/push).
+        _name (str): Name of the exporter.
+        _version (str): Version of the exporter.
+        _description (str): Description of the exporter.
+        _author (str): Author of the exporter.
+        _email (str): Author's email address.
+        url (str): Loki push API base URL (e.g., http://host:3100).
+        hostname (str): Extracted hostname from the Loki URL.
+        port (int): Extracted port from the Loki URL, if specified.
+        prefix (str): Protocol prefix (http or https) extracted from the Loki URL.
 
     Methods:
         payload(record: dict, labels: dict) -> dict:
-            Build a Loki-compatible JSON payload from a log record and labels.
-        connection() -> bool:
-            Check if the Loki endpoint is reachable and returns HTTP 200.
-        export(record: dict, labels: dict, timestamp: str) -> bool:
-            Send the log record to Loki, attaching a timestamp; returns True on success.
+            Constructs a Loki-compatible JSON payload from a log record and labels.
+        connection(cached_ip: str) -> bool:
+            Checks connectivity to the Loki endpoint using the cached IP address.
+        cache_dns() -> str:
+            Resolves and caches the IP address of the Loki hostname.
+        export(record: dict, labels: dict, timestamp: str, cached_ip: str, retry: bool = False) -> tuple:
+            Sends the log record to Loki, attaching a timestamp and retrying if necessary.
     """
     def __init__(self):
         """
         Initializes the LokiExporter.
 
-        Reads the Loki URL from the LOKI_URL environment variable
-        (default: "http://localhost:3100/loki/api/v1/push") and sets the
-        following metadata attributes:
-          - _name
-          - _version
-          - _description
-          - _author
-          - _email
+        This constructor sets up the LokiExporter by:
+        - Reading the Loki URL from the `LOKI_URL` environment variable (default: "http://localhost:3100").
+        - Extracting and storing the hostname, port, and protocol prefix from the URL.
+        - Setting metadata attributes such as:
+          - `_name`: The name of the exporter.
+          - `_version`: The version of the exporter.
+          - `_description`: A brief description of the exporter.
+          - `_author`: The author's name.
+          - `_email`: The author's email address.
         """
         self._name = "LokiExporter"
         self._version = "1.0.0"
@@ -534,21 +614,22 @@ class LokiExporter:
     
     def payload(self, record: dict, labels: dict) -> dict:
         """
-        Build a Loki push API payload.
+        Constructs a Loki push API payload.
 
-        This method merges the given log record and labels into the
-        JSON structure required by Loki’s /loki/api/v1/push endpoint.
-        It attaches a nanosecond‐precision timestamp and includes the
-        "job": "unifi-syslog-test" label by default.
+        This method combines the provided log record and labels into the
+        JSON structure required by Loki's /loki/api/v1/push endpoint. It
+        includes a nanosecond-precision timestamp and adds a default label
+        "job" with the value "unifi-exporter".
 
         Args:
-            record (dict): A log record to send (will be JSON‐serialized).
-            labels (dict): A dict of stream labels (string keys/values).
+            record (dict): The log record to send, which will be serialized to JSON.
+            labels (dict): A dictionary of stream labels with string keys and values.
 
         Returns:
-            dict: A payload dict with a "streams" list, each containing:
-              - "stream": the labels
-              - "values": a list of [timestamp, record] entries
+            dict: A dictionary containing the Loki payload with the following structure:
+            - "streams": A list of streams, each containing:
+                - "stream": The labels dictionary.
+                - "values": A list of [timestamp, record] entries.
         """
         labels["job"] = "unifi-exporter"
         payload = {
@@ -567,14 +648,15 @@ class LokiExporter:
         """
         Check connectivity to the configured Loki endpoint.
 
-        Performs an HTTP GET against `self.url` and validates:
-          - URL format (must start with http:// or https:// and include a hostname, optional port)
-          - HTTP response code is 200
+        This method performs an HTTP GET request to the Loki endpoint using the cached IP address
+        and validates the response. It ensures the endpoint is reachable and functioning correctly.
 
         Logs detailed errors for:
-          - Invalid URL format
-          - Non-200 responses
-          - Unreachable endpoint
+          - Non-200 HTTP response codes.
+          - Unreachable endpoint or connection issues.
+
+        Args:
+            cached_ip (str): The cached IP address of the Loki hostname.
 
         Returns:
             bool: True if the endpoint is reachable and returns HTTP 200, False otherwise.
@@ -590,16 +672,14 @@ class LokiExporter:
 
     def cache_dns(self) -> str:
         """
-        Cache the DNS resolution of a given URL.
+        Resolves and caches the IP address of the Loki hostname.
 
-        This method resolves the hostname of the provided URL and returns
-        the IP address. It also caches the result to avoid repeated lookups.
-
-        Args:
-            url (str): The URL to resolve.
+        This method performs a DNS lookup for the hostname extracted from the Loki URL
+        and returns the resolved IP address. If the resolution fails, it logs an error
+        and returns None.
 
         Returns:
-            str: The resolved IP address.
+            str: The resolved IP address if successful, or None if the resolution fails.
         """
         try:
             ip = socket.gethostbyname(self.hostname)
@@ -611,19 +691,29 @@ class LokiExporter:
         
     def export(self, record: dict, labels: dict, timestamp: str, cached_ip: str, retry: bool = False) -> tuple:
         """
-        Export a log record to Loki.
+        Exports a log record to Loki.
 
-        This method verifies the Loki endpoint is reachable, adds the optional
-        source timestamp to the record, constructs the Loki payload, and sends
-        it via HTTP POST.
+        This method performs the following steps:
+        1. Verifies if the Loki endpoint is reachable using the cached IP address.
+        2. Optionally retries DNS resolution and connectivity if the initial attempt fails.
+        3. Adds the provided source timestamp to the log record, if specified.
+        4. Constructs the Loki-compatible payload using the log record and labels.
+        5. Sends the payload to the Loki endpoint via an HTTP POST request.
+
+        If the export fails and retry is enabled, it attempts to resolve the DNS again
+        and retries the export process.
 
         Args:
-            record (dict): The log record to export.
-            labels (dict): A dict of stream labels for the log entry.
+            record (dict): The log record to export, which will be serialized to JSON.
+            labels (dict): A dictionary of stream labels with string keys and values.
             timestamp (str): Optional original timestamp to attach as "source_timestamp".
+            cached_ip (str): The cached IP address of the Loki hostname.
+            retry (bool, optional): Whether to retry the export process on failure. Defaults to False.
 
         Returns:
-            bool: True if the export succeeded, False otherwise.
+            tuple: A tuple containing:
+            - cached_ip (str): The cached IP address used for the export.
+            - success (bool): True if the export succeeded, False otherwise.
         """
         if retry == True:
             cached_ip = self.cache_dns()
@@ -669,25 +759,30 @@ class GeoIP:
     """
     GeoIP utilities for managing and querying a MaxMind GeoLite2-City database.
 
-    This class handles:
-      - Downloading and extracting the GeoIP database archive.
-      - Retrieving and validating the SHA256 hash of the database.
-      - Updating the local database when the remote checksum changes.
-      - Filtering out private, loopback, link-local, multicast, and reserved IPs.
-      - Performing city-level lookups and returning structured GeoIPData.
+    This class provides functionality to:
+      - Download and extract the GeoIP database archive from MaxMind.
+      - Retrieve and validate the SHA256 hash of the database to ensure integrity.
+      - Automatically update the local database when a newer version is available.
+      - Filter out IP addresses that are private, loopback, link-local, multicast, or reserved.
+      - Perform city-level GeoIP lookups and return structured geographic data in a GeoIPData object.
 
-    Environment variables:
-      - GEOIP_ACCOUNT_ID: MaxMind account ID for authenticated downloads.
-      - GEOIP_LICENSE_KEY: MaxMind license key for authenticated downloads.
+    Environment variables required for authenticated downloads:
+      - GEOIP_ACCOUNT_ID: MaxMind account ID.
+      - GEOIP_LICENSE_KEY: MaxMind license key.
+
+    This class ensures that the GeoIP database is always up-to-date and provides robust error handling
+    for download, extraction, and lookup operations.
     """
     def __init__(self):
         """
         Initializes the GeoIP utility.
 
-        Reads MaxMind account ID and license key from environment variables,
-        sets metadata (name, version, description, author, email) and download URLs.
-        Ensures the 'database' directory exists and that the GeoLite2-City database file
-        is present; if not, downloads and extracts it automatically.
+        This constructor sets up the GeoIP utility by:
+        - Reading MaxMind account ID and license key from environment variables.
+        - Setting metadata attributes such as name, version, description, author, and email.
+        - Defining download URLs for the GeoLite2-City database and its hash file.
+        - Ensuring the 'database' directory exists, creating it if necessary.
+        - Checking for the presence of the GeoLite2-City database file; if missing, it downloads and extracts the database automatically.
         """
         self._name = "GeoIP"
         self._version = "1.0.0"
@@ -710,33 +805,37 @@ class GeoIP:
     
     class GeoIPData:
         """
-        Class to represent GeoIP lookup results.
+        Represents the results of a GeoIP lookup.
+
+        This class encapsulates geographic and network-related information
+        obtained from a GeoIP database query. It provides structured access
+        to various attributes, including location details and traits.
 
         Attributes:
-            full (dict): Complete GeoIP data returned by the MaxMind reader.
-            traits (dict): Traits section of the GeoIP data (e.g., autonomous system info).
-            continent (str): Continent ISO code (e.g., 'NA').
-            country (str): Country ISO code (e.g., 'US').
-            subdivision (str): First subdivision (state/province) ISO code (e.g., 'CA').
-            city (str): City name.
-            postal (str): Postal code.
-            latitude (float): Geographic latitude.
-            longitude (float): Geographic longitude.
+            full (dict): The complete GeoIP data returned by the MaxMind reader.
+            traits (dict): Network traits, such as autonomous system information.
+            continent (str): The ISO code of the continent (e.g., 'NA' for North America).
+            country (str): The ISO code of the country (e.g., 'US' for the United States).
+            subdivision (str): The ISO code of the first-level subdivision (e.g., 'CA' for California).
+            city (str): The name of the city.
+            postal (str): The postal code of the location.
+            latitude (float): The latitude coordinate of the location in decimal degrees.
+            longitude (float): The longitude coordinate of the location in decimal degrees.
         """
         def __init__(self, full: dict = None, traits: dict = None, continent: str = None, country: str = None, subdivision: str = None, city: str = None, postal: str = None, latitude: str = None, longitude: str = None):
             """
-            Initialize a GeoIPData instance with selected geographic information.
+            Initializes a GeoIPData instance with geographic and network-related information.
 
             Args:
-                full (dict): Complete GeoIP data dictionary returned by the MaxMind reader.
-                traits (dict): Traits section from the GeoIP data (e.g., autonomous system info).
-                continent (str): Continent ISO code (e.g., "NA").
-                country (str): Country ISO code (e.g., "US").
-                subdivision (str): First subdivision ISO code (state or province, e.g., "CA").
-                city (str): City name.
-                postal (str): Postal code.
-                latitude (float): Latitude coordinate in decimal degrees.
-                longitude (float): Longitude coordinate in decimal degrees.
+                full (dict, optional): The complete GeoIP data dictionary returned by the MaxMind reader.
+                traits (dict, optional): Network traits, such as autonomous system information.
+                continent (str, optional): The ISO code of the continent (e.g., "NA" for North America).
+                country (str, optional): The ISO code of the country (e.g., "US" for the United States).
+                subdivision (str, optional): The ISO code of the first-level subdivision (e.g., "CA" for California).
+                city (str, optional): The name of the city.
+                postal (str, optional): The postal code of the location.
+                latitude (float, optional): The latitude coordinate of the location in decimal degrees.
+                longitude (float, optional): The longitude coordinate of the location in decimal degrees.
             """
             self.full = full
             self.traits = traits
@@ -750,17 +849,34 @@ class GeoIP:
 
         def __repr__(self):
             """
-            Return the canonical string representation of this GeoIPData instance,
-            including all its attributes: full record, continent code, country code,
-            subdivision code, city, postal code, traits, latitude, and longitude.
+            Returns a string representation of the GeoIPData instance.
+
+            This representation includes all the attributes of the instance:
+            - `full`: The complete GeoIP data dictionary.
+            - `continent`: The ISO code of the continent (e.g., "NA" for North America).
+            - `country`: The ISO code of the country (e.g., "US" for the United States).
+            - `subdivision`: The ISO code of the first-level subdivision (e.g., "CA" for California).
+            - `city`: The name of the city.
+            - `postal`: The postal code of the location.
+            - `traits`: Network traits, such as autonomous system information.
+            - `latitude`: The latitude coordinate of the location in decimal degrees.
+            - `longitude`: The longitude coordinate of the location in decimal degrees.
+
+            Returns:
+                str: A string representation of the GeoIPData instance.
             """
             return f"GeoIPData(full={self.full}, continent={self.continent}, country={self.country}, subdivision={self.subdivision}, city={self.city}, postal={self.postal}, traits={self.traits}, latitude={self.latitude}, longitude={self.longitude})"
         
     def download(self) -> bool:
         """
         Downloads the GeoIP database and extracts it to the specified location.
+
+        This method retrieves the GeoLite2-City database archive from MaxMind,
+        extracts the database file, and saves it to the 'database' directory.
+        It also downloads the corresponding SHA256 hash file for integrity checks.
+
         Returns:
-            bool: True if the database is downloaded and extracted successfully.
+            bool: True if the database and hash file are downloaded and extracted successfully, False otherwise.
         """
         try:
             # Download the GeoIP database
@@ -801,9 +917,15 @@ class GeoIP:
 
     def hash(self) -> str:
         """
-        Downloads the GeoIP hash file.
+        Retrieves the GeoIP hash value from the MaxMind server.
+
+        This method downloads the SHA256 hash file for the GeoLite2-City database
+        from the MaxMind server. The hash is used to verify the integrity of the
+        database and check for updates.
+
         Returns:
-            str: The hash value as a string.
+            str: The hash value as a string if the download is successful, or None
+             if an error occurs during the process.
         """
         try:
             with requests.get(self._hash_url, auth=(self._account_id, self._license_key), stream=True) as response:
@@ -819,11 +941,16 @@ class GeoIP:
 
     def update(self):
         """
-        Checks if the GeoIP database is installed and up to date.
-        If not, downloads the latest version of the database.
-        
+        Ensures the GeoIP database is installed and up to date.
+
+        This method checks if the GeoIP database and its associated hash file are present.
+        If the database is missing, it downloads and installs the latest version.
+        If the database is present, it compares the local hash with the remote hash
+        to determine if an update is needed. If the hashes differ, the latest version
+        of the database is downloaded and installed.
+
         Returns:
-            bool: True if the database is up to date, False otherwise.
+            bool: True if the database is up to date or successfully updated, False otherwise.
         """
         # Check if the hash file exists
         if not os.path.exists("database/geoip.sha256"):
@@ -854,16 +981,17 @@ class GeoIP:
 
     def filter(self, ip: str) -> bool:
         """
-        Determines if the given IP address should be included in a GeoIP lookup.
-        
-        This method filters out IP addresses that are private, loopback, link-local,
-        multicast, or reserved, as these are not suitable for public GeoIP lookups.
+        Filters the given IP address to determine its suitability for GeoIP lookup.
+
+        This method checks if the IP address is public and not part of any reserved ranges,
+        such as private, loopback, link-local, multicast, or other reserved addresses.
+        Only public IP addresses are valid for GeoIP lookups.
 
         Args:
-            ip (str): The IP address to check.
+            ip (str): The IP address to validate.
 
         Returns:
-            bool: True if the IP is valid for GeoIP lookup (i.e., public), False otherwise.
+            bool: True if the IP address is valid for GeoIP lookup (public), False otherwise.
         """
         try:
             # Check if the IP is a valid IPv4 or IPv6 address
@@ -915,17 +1043,21 @@ class GeoIP:
         """
         Performs a city-level GeoIP lookup for the given IP address.
 
-        This method checks if the IP is suitable for public GeoIP lookup (not private, loopback, etc.),
-        ensures the GeoIP database is present and up to date, and then queries the MaxMind GeoLite2-City
-        database for geographic information about the IP.
+        This method validates the IP address to ensure it is suitable for a public GeoIP lookup
+        (e.g., not private, loopback, or reserved). It also ensures the GeoIP database is present
+        and up to date. If the database is missing, it will be downloaded automatically.
+
+        The method queries the MaxMind GeoLite2-City database to retrieve geographic information
+        about the provided IP address. The resulting data is structured into a GeoIPData object,
+        which includes details such as continent, country, subdivision, city, postal code,
+        latitude, longitude, network traits, and the full record.
 
         Args:
             ip (str): The IP address to look up.
 
         Returns:
-            GeoIPData: An object containing structured geographic data (continent, country, subdivision,
-                   city, postal code, latitude, longitude, traits, and the full record), or None if
-                   the lookup fails or the IP is not valid for lookup.
+            GeoIPData: A GeoIPData object containing structured geographic and network-related
+                   information, or None if the lookup fails or the IP is not valid for lookup.
         """
         # Check if the the IP address is valid for GeoIP lookup
         if not self.filter(ip):

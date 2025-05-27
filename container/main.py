@@ -44,8 +44,8 @@ cached_ip = None
 
 def counter():
     """
-    Logs the number of successful and failed log exports to Loki every minute,
-    then resets the counters for the next interval.
+    Periodically logs the count of successfully and unsuccessfully exported logs to Loki.
+    Resets the counters after each interval to prepare for the next reporting cycle.
     """
     global success_count, failure_count
     while not core().stop_flag:
@@ -60,11 +60,18 @@ def counter():
 
 def evaluate(message):
     """
-    Parses and evaluates an incoming log message to determine its format (syslog or CEF),
-    processes it using the appropriate parser, and updates success or failure counters.
+    Evaluates an incoming log message to determine its format (syslog or CEF),
+    processes it using the appropriate parser, and updates the success or failure counters.
 
     Args:
         message (str): The incoming log message to be evaluated and parsed.
+
+    Behavior:
+        - Cleans the message by removing null bytes and non-printable characters.
+        - Identifies the message format (syslog or CEF) based on specific headers.
+        - Parses the message using the corresponding parser.
+        - Updates success_count or failure_count based on the parsing result.
+        - Logs errors for unknown message formats or parsing failures.
     """
     global success_count, failure_count, cached_ip
 
@@ -117,7 +124,8 @@ def evaluate(message):
 
 def database_update():
     """
-    Periodically checks and updates the GeoIP database every 12 hours.
+    Periodically checks if the GeoIP database is up to date and updates it if necessary.
+    This process runs in a loop, sleeping for 12 hours between checks, and stops when the application is terminated.
     """
     geo = geoip()
     core().logger("debug", "main", "database_update", "Starting GeoIP database update thread.")
@@ -129,8 +137,29 @@ def database_update():
 
 def main():
     """
-    Main function to initialize the syslog server, set up signal handling,
-    and start the GeoIP database update thread.
+    Main function to initialize and run the syslog server application.
+    
+    This function performs the following tasks:
+        1. Registers a SIGTERM handler for graceful shutdown.
+        2. Prints the application banner.
+        3. Validates the presence of required environment variables.
+        4. Starts a background thread to periodically update the GeoIP database.
+        5. Sets up a UDP socket to listen for incoming syslog messages.
+        6. Logs received syslog messages and sends them to a parser for evaluation.
+        7. Periodically checks for a stop flag to allow for controlled termination.
+        8. Handles application shutdown gracefully, including user interruptions.
+    
+    The syslog server listens on a configurable port (default: 5514) and processes
+    incoming messages in real-time. It also maintains a counter thread for additional
+    functionality.
+    
+    Note:
+        - The application relies on environment variables for configuration.
+        - The GeoIP database update and message parsing are handled in separate threads.
+        - The server uses a timeout mechanism to periodically check for termination signals.
+    
+    Raises:
+        SystemExit: If required environment variables are missing.
     """
     # Register the SIGTERM handler
     core().logger("debug", "main", "main", "Registering SIGTERM handler.")
