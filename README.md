@@ -33,7 +33,7 @@ A Python based Docker container that parses and enriches Syslog messages recieve
 | LOG_LEVEL         | Loging Level          | debug, informational, warning, error, critical                   | informational    | ❌       |
 | LOKI_URL          | Loki Endpoint URL     | http(s)://domain.tld:port                                        | http://loki:3100 | ❌       |
 
-⚠️: If not provided, GeoIP Enrichment will be `disabled`
+⚠️ If not provided, GeoIP Enrichment will be `disabled`
 
 # Configuration Maps
 Configuration Maps stored in `/app/config` directory of the container:
