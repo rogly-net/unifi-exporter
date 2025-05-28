@@ -26,12 +26,14 @@ A Python based Docker container that parses and enriches Syslog messages recieve
 
 # Environment Variables
 | VARIABLE          | DESCRIPTION           | VALUES                                                           | DEFAULT          | REQUIRED |
-|-------------------|-----------------------|------------------------------------------------------------------|------------------|:----:|
-| GEOIP_ACCOUNT_ID  | MaxMind Account ID    | String                                                           | None             | ✅    |
-| GEOIP_LICENSE_KEY | MaxMind License Key   | String                                                           | None             | ✅    |
-| TZ                | Timezone              | TZ Database Time Zone                                            | UTC              | ❌    |
-| LOG_LEVEL         | Loging Level          | debug, informational, warning, error, critical                   | informational    | ❌    |
-| LOKI_URL          | Loki Endpoint URL     | http(s)://domain.tld:port                                        | http://loki:3100 | ❌    |
+|-------------------|-----------------------|------------------------------------------------------------------|------------------|:--------:|
+| GEOIP_ACCOUNT_ID  | MaxMind Account ID    | String                                                           | None             | ⚠️       |
+| GEOIP_LICENSE_KEY | MaxMind License Key   | String                                                           | None             | ⚠️       |
+| TZ                | Timezone              | TZ Database Time Zone                                            | UTC              | ❌       |
+| LOG_LEVEL         | Loging Level          | debug, informational, warning, error, critical                   | informational    | ❌       |
+| LOKI_URL          | Loki Endpoint URL     | http(s)://domain.tld:port                                        | http://loki:3100 | ❌       |
+
+⚠️: If not provided, GeoIP Enrichment will be `disabled`
 
 # Configuration Maps
 Configuration Maps stored in `/app/config` directory of the container:

@@ -794,14 +794,15 @@ class GeoIP:
         self._db_url = 'https://download.maxmind.com/geoip/databases/GeoLite2-City/download?suffix=tar.gz'
         self._hash_url = 'https://download.maxmind.com/geoip/databases/GeoLite2-City/download?suffix=tar.gz.sha256'
         
-        # Check if the database directory exists, if not create it
-        if not os.path.exists("database"):
-            os.makedirs("database")
-        
-        # Check if the database file exists, if not create it
-        if not os.path.exists("database/geoip.mmdb"):
-            Core().logger("informational", "geoip", "init", "GeoIP database not found, downloading it now...")
-            self.download()
+        if self._account_id is not None and self._license_key is not None:
+            # Check if the database directory exists, if not create it
+            if not os.path.exists("database"):
+                os.makedirs("database")
+            
+            # Check if the database file exists, if not create it
+            if not os.path.exists("database/geoip.mmdb"):
+                Core().logger("informational", "geoip", "init", "GeoIP database not found, downloading it now...")
+                self.download()
     
     class GeoIPData:
         """

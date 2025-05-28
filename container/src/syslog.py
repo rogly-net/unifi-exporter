@@ -1,4 +1,5 @@
 import src.core as core
+import os
 import re
 
 class Syslog:
@@ -228,7 +229,7 @@ class Syslog:
                                 self.record["destination_mac"] = ':'.join(mac_address_array[6:12])
                                 del self.record["mac_address"]
                         
-                        elif key == "source_ip":
+                        elif key == "source_ip" and os.getenv("GEOIP_ACCOUNT_ID") and os.getenv("GEOIP_LICENSE_KEY"):
                             geo = self.geo.lookup(value)
                             if geo:
                                 if geo.traits:
@@ -249,7 +250,7 @@ class Syslog:
                                     self.labels["source_continent"] = geo.continent
                             self.record["source_dns"] = self.map.ip(value)
 
-                        elif key == "destination_ip":
+                        elif key == "destination_ip" and os.getenv("GEOIP_ACCOUNT_ID") and os.getenv("GEOIP_LICENSE_KEY"):
                             geo = self.geo.lookup(value)
                             if geo:
                                 if geo.traits:

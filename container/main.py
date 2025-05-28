@@ -32,9 +32,7 @@ banner_config = rf"""
 required_env_vars = [
     "LOG_LEVEL",
     "TZ",
-    "LOKI_URL",
-    "GEOIP_ACCOUNT_ID",
-    "GEOIP_LICENSE_KEY"
+    "LOKI_URL"
 ]
 
 # Initialize success and failure counts
@@ -178,9 +176,10 @@ def main():
         core().logger("informational", "main", "main", "All required environment variables are set.")
 
     # Start a thread for periodic GeoIP database checks
-    core().logger("debug", "main", "main", "Starting GeoIP database update thread.")
-    geoip_thread = threading.Thread(target=database_update, daemon=True)
-    geoip_thread.start()
+    if os.getenv("GEOIP_ACCOUNT_ID") and os.getenv("GEOIP_LICENSE_KEY"):
+        core().logger("debug", "main", "main", "Starting GeoIP database update thread.")
+        geoip_thread = threading.Thread(target=database_update, daemon=True)
+        geoip_thread.start()
 
     # Set up a UDP socket to listen for syslog messages
     host = "0.0.0.0"
