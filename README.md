@@ -59,20 +59,88 @@ Configuration Maps stored in `/app/config` directory of the container:
     - List of TCP Flags to search for in a Flow Log to later append to a list of flags in a single flow
 
 # Quick Start
+
+## Kubernetes (Helm)
+1. Add the Helm Repository
+    ```bash
+    helm repo add rogly-net https://rogly-net.github.io/helm-charts
+    ```
+2. Update helm packages
+    ```bash
+    helm repo update
+    ```
+3. Deploy UniFi-Exporter
+    ```bash
+    helm upgrade --install unifi-exporter rogly-net/unifi-exporter
+    ```
+4. (Optional) Customize the deployment
+
+    Example `values.yaml`
+    ```yaml
+    deploymentMode: deployment
+
+    config:
+        logLevel: informational
+        timezone: America/Chicago
+        loki:
+            url: http://loki-gateway.observability.svc.cluster.local:80
+
+    dashboards:
+        enabled: true
+        label: grafana_dashboard
+        labelValue: "true"
+        folderAnnotation: "grafana.io/folder"
+        folderValue: "Logs"
+
+    podAnnotations:
+        keel.sh/policy: all
+        keel.sh/match-tag: "true"
+        keel.sh/trigger: poll
+        keel.sh/pollSchedule: "@every 60m"
+        reloader.stakater.com/auto: "true"
+
+    service:
+        type: LoadBalancer
+        port: 5514
+        loadBalancerIP: "192.168.1.1"
+
+    resources:
+        requests:
+            cpu: 500m
+
+    autoscaling:
+        enabled: true
+        minReplicas: 2
+        maxReplicas: 4
+        targetCPUUtilizationPercentage: 80
+
+    persistence:
+        database:
+            enabled: true
+            size: 2Gi
+            storageClass: "rook-cephfs"
+    ```
+5. (Optional) Update the deployment
+    ```bash
+    helm upgrade --install unifi-exporter rogly-net/unifi-exporter --values values.yaml
+    ```
+For more details on customizing the Helm deployment refer to the [Helm Chart Documentation](https://github.com/rogly-net/helm-charts/blob/main/charts/unifi-exporter/README.md)
+
+## Docker
 1. Launch the Docker Container
-```bash
-docker run -d \
-  --name unifi-exporter \
-  -e LOG_LEVEL=informational \                      # Log Level for Console
-  -e TZ=America/Chicago \                           # Timezone for Time Stamps
-  -e LOKI_URL=http://loki.docker.local:3100 \       # Loki Endpoint to Send Logs
-  -e GEOIP_ACCOUNT_ID=1234567 \                     # MaxMind Account ID
-  -e GEOIP_LICENSE_KEY=abcd1234 \                   # MaxMind License Key
-  -p 5514:5514/udp \                                # Port Mapping
-  -v /path/to/local/database:/app/database \        # Persistent Storage for Database (Recommended to prevent hitting MaxMind API Limits)
-  -v /path/to/local/config:/app/config \            # Persistent Storage for Config Maps (Required if modifying)
-  ghcr.io/rogly-net/unifi-exporter:latest
-```
+    ```bash
+    docker run -d \
+    --name unifi-exporter \
+    -e LOG_LEVEL=informational \                      # Log Level for Console
+    -e TZ=America/Chicago \                           # Timezone for Time Stamps
+    -e LOKI_URL=http://loki.docker.local:3100 \       # Loki Endpoint to Send Logs
+    -e GEOIP_ACCOUNT_ID=1234567 \                     # MaxMind Account ID
+    -e GEOIP_LICENSE_KEY=abcd1234 \                   # MaxMind License Key
+    -p 5514:5514/udp \                                # Port Mapping
+    -v /path/to/local/database:/app/database \        # Persistent Storage for Database (Recommended to prevent hitting MaxMind API Limits)
+    -v /path/to/local/config:/app/config \            # Persistent Storage for Config Maps (Required if modifying)
+    ghcr.io/rogly-net/unifi-exporter:latest
+    ```
 2. Configure UniFi Network Logs
     - Settings > CyberSecure > Traffic Logging > Activity Logging > SIEM Server
         - Set the IP and Port to the Container
