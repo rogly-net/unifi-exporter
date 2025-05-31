@@ -6,7 +6,6 @@ A Python based Docker container that parses and enriches Syslog messages recieve
  - Modular Mapping Configurations
  - Automatic GeoIP Database Updates
  - CEF and Syslog Parsing (Since Ubiquiti can't pick one 😋)
- - Grafana Dashboards (🚨 May require updates if modifying Config Maps)
  - Reverse-DNS Lookups for source and destinations IP Addresses (creates `source_dns` and `destination_dns` JSON records)
  - GeoIP Lookups for source and destination IP Addresses
  - Normalized Severity and Facility Labels
@@ -126,7 +125,28 @@ Configuration Maps stored in `/app/config` directory of the container:
     ```
 For more details on customizing the Helm deployment refer to the [Helm Chart Documentation](https://github.com/rogly-net/helm-charts/blob/main/charts/unifi-exporter/README.md)
 
-## Docker
+## Docker-Compose
+```yaml
+version: '3.9'
+services:
+  unifi-exporter:
+    image: ghcr.io/rogly-net/unifi-exporter:latest
+    container_name: unifi-exporter
+    restart: always
+    ports:
+      - "5514:5514/udp"
+    environment:
+      TZ: "America/Chicago"
+      LOG_LEVEL: "informational"
+      LOKI_URL: "http://loki:3100"
+      # GEOIP_ACCOUNT_ID: "your_geoip_account_id"
+      # GEOIP_LICENSE_KEY: "your_geoip_license_key"
+    volumes:
+      - /path/to/your/config:/app/config # (Optional) Persistent Storage for Config Maps
+      - /path/to/your/database:/app/database # (Optional) Recommended to prevent hitting MaxMind API limits
+```
+
+## Docker Run
 1. Launch the Docker Container
     ```bash
     docker run -d \
@@ -134,8 +154,8 @@ For more details on customizing the Helm deployment refer to the [Helm Chart Doc
     -e LOG_LEVEL=informational \                      # Log Level for Console
     -e TZ=America/Chicago \                           # Timezone for Time Stamps
     -e LOKI_URL=http://loki.docker.local:3100 \       # Loki Endpoint to Send Logs
-    -e GEOIP_ACCOUNT_ID=1234567 \                     # MaxMind Account ID
-    -e GEOIP_LICENSE_KEY=abcd1234 \                   # MaxMind License Key
+    -e GEOIP_ACCOUNT_ID=1234567 \                     # MaxMind Account ID (If not provided, GeoIP Enrichments will be disabled)
+    -e GEOIP_LICENSE_KEY=abcd1234 \                   # MaxMind License Key (If not provided, GeoIP Enrichments will be disabled)
     -p 5514:5514/udp \                                # Port Mapping
     -v /path/to/local/database:/app/database \        # Persistent Storage for Database (Recommended to prevent hitting MaxMind API Limits)
     -v /path/to/local/config:/app/config \            # Persistent Storage for Config Maps (Required if modifying)
@@ -149,11 +169,11 @@ For more details on customizing the Helm deployment refer to the [Helm Chart Doc
         - Set the IP and Port to the Container
 
 # Grafana Dashboards
-1. **Overview:** `dashboards/logs-unifi-overview.json`
+1. **[Overview](https://raw.githubusercontent.com/rogly-net/helm-charts/refs/heads/main/charts/unifi-exporter/files/dashboards/logs-unifi-overview.json):**
 ![alt text](screenshots/logs-unifi-overview.png "UniFi Logs Overview")
 
-2. **Flows Overview:** `dashboards/logs-unifi-flows-overview.json`
+2. **[Flows Overview](https://raw.githubusercontent.com/rogly-net/helm-charts/refs/heads/main/charts/unifi-exporter/files/dashboards/logs-unifi-flows-overview.json):** `dashboards/logs-unifi-flows-overview.json`
 ![alt text](screenshots/logs-unifi-flows-overview.png "UniFi Flows Overview")
 
-3. **Flows Investigate:** `dashboards/logs-unifi-flows-investigate.json`
+3. **[Flows Investigate](https://raw.githubusercontent.com/rogly-net/helm-charts/refs/heads/main/charts/unifi-exporter/files/dashboards/logs-unifi-flows-investigate.json):** `dashboards/logs-unifi-flows-investigate.json`
 ![alt text](screenshots/logs-unifi-flows-investigate.png "UniFi Flows Investigate")

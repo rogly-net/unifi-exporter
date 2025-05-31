@@ -8,10 +8,10 @@ services:
       - "5514:5514/udp"
     environment:
       TZ: "America/Chicago"
-      LOG_LEVEL: "info"
+      LOG_LEVEL: "informational"
       LOKI_URL: "http://loki:3100"
-      GEOIP_ACCOUNT_ID: "your_geoip_account_id"
-      GEOIP_LICENSE_KEY: "your_geoip_license_key"
+      # GEOIP_ACCOUNT_ID: "your_geoip_account_id"
+      # GEOIP_LICENSE_KEY: "your_geoip_license_key"
     volumes:
-      - /path/to/your/config:/app/config
-      - /path/to/your/database:/app/database
+      - /path/to/your/config:/app/config # (Optional) Persistent Storage for Config Maps
+      - /path/to/your/database:/app/database # (Optional) Recommended to prevent hitting MaxMind API limits
