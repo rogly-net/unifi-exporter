@@ -1,6 +1,18 @@
 # UniFi Exporter
 A Python based Docker container that parses and enriches Syslog messages recieved from a UniFi Controller and exports them to a Loki endpoint.
 
+# Navigation
+- [Features](#features)
+- [Requirements](#requirements)
+- [Environment Variables](#environment-variables)
+- [Configuration Maps](#configuration-maps)
+- [Quick Start](#quick-start)
+    - [Helm](#helm-kubernetes)
+    - [Docker Compose](#docker-compose)
+    - [Docker Run](#docker-run)
+- [Grafana Dashboards](#grafana-dashboards)
+
+
 # Features
  - Network and Control Plane Syslog Parsing
  - Modular Mapping Configurations
@@ -59,7 +71,7 @@ Configuration Maps stored in `/app/config` directory of the container:
 
 # Quick Start
 
-## Kubernetes (Helm)
+## Helm (Kubernetes)
 1. Add the Helm Repository
     ```bash
     helm repo add rogly-net https://rogly-net.github.io/helm-charts
