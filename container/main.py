@@ -202,7 +202,11 @@ def main():
                     if data:
                         # with open("config/raw.log", "a") as raw_log:
                         #     raw_log.write(data.decode('utf-8').strip() + "\n")
-                        evaluate(data.decode('utf-8').strip())  # Send the message to the parser
+                        try: evaluate(data.decode('utf-8').strip())  # Send the message to the parser
+                        except Exception as e:
+                            core().logger("error", "main", "main", f"Error evaluating message: {e}")
+                            core().logger("error", "main", "main", f"Message: {data.decode('utf-8').strip()}")
+                            continue
                 except socket.timeout:
                     core().logger("debug", "main", "main", "Socket timeout occurred, checking stop flag.")
                     continue  # Timeout occurred, check the stop flag again
