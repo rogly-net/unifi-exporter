@@ -742,6 +742,7 @@ class LokiExporter:
                     response = requests.post(f"{self.prefix}://{cached_ip}:{self.port}/loki/api/v1/push", json=payload)
                     if response.status_code != 204:
                         Core().logger("error", "loki-exporter", "export", f"Error exporting log to Loki: {response.status_code}")
+                        Core().logger("error", "loki-exporter", "export", f"Payload: {payload}")
                         return cached_ip, False
                     else:
                         return cached_ip, True
