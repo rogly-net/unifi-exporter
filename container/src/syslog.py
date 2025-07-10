@@ -429,47 +429,47 @@ class Syslog:
             return cached_ip, False
         
         # Extract the timestamp from the message
-        timestamp = self.core.extract(priority.cleaned, r"^([A-Z][a-z]{2} {1,2}\d{1,2} \d{2}:\d{2}:\d{2})", 1)
-        self.core.logger("debug", "syslog", "parse", f"Extracted timestamp: {timestamp.value if timestamp else 'None'}")
+        try:
+            timestamp = self.core.extract(priority.cleaned, r"^([A-Z][a-z]{2} {1,2}\d{1,2} \d{2}:\d{2}:\d{2})", 1)
+            self.core.logger("debug", "syslog", "parse", f"Extracted timestamp: {timestamp.value if timestamp else 'None'}")
+        except Exception as e:
+            self.core.logger("error", "syslog", "parse", f"Error extracting timestamp: {e}")
+            timestamp = "unknown"
         
-        if timestamp.value:
-            # Extract the hostname from the message
-            hostname = self.core.extract(timestamp.cleaned, r"(^\S+)\s", 1)
-            self.core.logger("debug", "syslog", "parse", f"Extracted hostname: {hostname.value if hostname else 'None'}")
+        # Extract the hostname from the message
+        hostname = self.core.extract(timestamp.cleaned, r"(^\S+)\s", 1)
+        self.core.logger("debug", "syslog", "parse", f"Extracted hostname: {hostname.value if hostname else 'None'}")
+        
+        if hostname.value:
+            self.labels["hostname"] = re.sub(r"\s", "-", hostname.value)
+            self.core.logger("debug", "syslog", "parse", f"Assigned hostname label: {self.labels['hostname']}")
             
-            if hostname.value:
-                self.labels["hostname"] = re.sub(r"\s", "-", hostname.value)
-                self.core.logger("debug", "syslog", "parse", f"Assigned hostname label: {self.labels['hostname']}")
-                
-                # Check if there is a description in the message
-                description = self.core.extract(hostname.cleaned, r"DESCR=\"(.+)\"", 1)
-                self.core.logger("debug", "syslog", "parse", f"Extracted description: {description.value if description else 'None'}")
-                
-                if description:
-                    # Parse as a flow log
-                    log = self.flow(hostname.cleaned)
-                    if log:
-                        self.core.logger("debug", "syslog", "parse", f"Parsed flow log: {log.record}, {log.labels}")
-                        cached_ip, result = self.loki.export(log.record, log.labels, timestamp.value, cached_ip)
-                        self.core.logger("debug", "syslog", "parse", f"Export status: {'Success' if result else 'Failure'}")
-                        return cached_ip, result
-                    else:
-                        self.core.logger("error", "syslog", "parse", f"No log returned for flow log: {message}")
-                        return cached_ip, False
+            # Check if there is a description in the message
+            description = self.core.extract(hostname.cleaned, r"DESCR=\"(.+)\"", 1)
+            self.core.logger("debug", "syslog", "parse", f"Extracted description: {description.value if description else 'None'}")
+            
+            if description:
+                # Parse as a flow log
+                log = self.flow(hostname.cleaned)
+                if log:
+                    self.core.logger("debug", "syslog", "parse", f"Parsed flow log: {log.record}, {log.labels}")
+                    cached_ip, result = self.loki.export(log.record, log.labels, timestamp.value, cached_ip)
+                    self.core.logger("debug", "syslog", "parse", f"Export status: {'Success' if result else 'Failure'}")
+                    return cached_ip, result
                 else:
-                    # Parse as a generic log
-                    log = self.generic(hostname.cleaned)
-                    if log:
-                        self.core.logger("debug", "syslog", "parse", f"Parsed generic log: {log.record}, {log.labels}")
-                        cached_ip, result = self.loki.export(log.record, log.labels, timestamp.value, cached_ip)
-                        self.core.logger("debug", "syslog", "parse", f"Export status: {'Success' if result else 'Failure'}")
-                        return cached_ip, result
-                    else:
-                        self.core.logger("error", "syslog", "parse", f"No log returned for generic log: {message}")
-                        return cached_ip, False
+                    self.core.logger("error", "syslog", "parse", f"No log returned for flow log: {message}")
+                    return cached_ip, False
             else:
-                self.core.logger("error", "syslog", "parse", f"Hostname not found in message: {timestamp.cleaned}")
-                return cached_ip, False
+                # Parse as a generic log
+                log = self.generic(hostname.cleaned)
+                if log:
+                    self.core.logger("debug", "syslog", "parse", f"Parsed generic log: {log.record}, {log.labels}")
+                    cached_ip, result = self.loki.export(log.record, log.labels, timestamp.value, cached_ip)
+                    self.core.logger("debug", "syslog", "parse", f"Export status: {'Success' if result else 'Failure'}")
+                    return cached_ip, result
+                else:
+                    self.core.logger("error", "syslog", "parse", f"No log returned for generic log: {message}")
+                    return cached_ip, False
         else:
-            self.core.logger("error", "syslog", "parse", f"Timestamp not found in message: {message}")
+            self.core.logger("error", "syslog", "parse", f"Hostname not found in message: {timestamp.cleaned}")
             return cached_ip, False
