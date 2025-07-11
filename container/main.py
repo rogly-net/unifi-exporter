@@ -209,7 +209,6 @@ def main():
                                 core().logger("error", "main", "main", f"Message: {data.decode('utf-8').strip()}")
                                 continue
                 except socket.timeout:
-                    core().logger("debug", "main", "main", "Socket timeout occurred, checking stop flag.")
                     continue  # Timeout occurred, check the stop flag again
         except KeyboardInterrupt:
             core().logger("critical", "main", "main", "Application interrupted by user.")
