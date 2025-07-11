@@ -465,10 +465,10 @@ class Syslog:
                 if log:
                     self.core.logger("debug", "syslog", "parse", f"Parsed generic log: {log.record}, {log.labels}")
                     
-                    if timestamp != "unknown":
+                    if timestamp != None:
                         cached_ip, result = self.loki.export(log.record, log.labels, timestamp.value, cached_ip)
                     else:
-                        cached_ip, result = self.loki.export(log.record, log.labels, timestamp, cached_ip)
+                        cached_ip, result = self.loki.export(log.record, log.labels, None, cached_ip)
                     
                     self.core.logger("debug", "syslog", "parse", f"Export status: {'Success' if result else 'Failure'}")
                     return cached_ip, result
