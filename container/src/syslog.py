@@ -437,7 +437,7 @@ class Syslog:
             timestamp = "unknown"
         
         # Extract the hostname from the message
-        if timestamp.cleaned:
+        if timestamp.cleaned is not None:
             hostname = self.core.extract(timestamp.cleaned, r"(^\S+)\s", 1)
             self.core.logger("debug", "syslog", "parse", f"Extracted hostname: {hostname.value if hostname else 'None'}")
         else:
