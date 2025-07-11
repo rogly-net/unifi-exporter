@@ -200,13 +200,14 @@ def main():
                 sock.settimeout(1)  # Set a timeout in seconds to periodically check the stop flag
                 try:
                     data, addr = sock.recvfrom(1024)  # Buffer size of 1024 bytes
-                    core().logger("debug", "main", "main", f"Received data from {addr}: {data}")
-                    if data:
-                        try: evaluate(data.decode('utf-8').strip())  # Send the message to the parser
-                        except Exception as e:
-                            core().logger("error", "main", "main", f"Error evaluating message: {e}")
-                            core().logger("error", "main", "main", f"Message: {data.decode('utf-8').strip()}")
-                            continue
+                    if data != b'\x00':
+                        core().logger("debug", "main", "main", f"Received data from {addr}: {data}")
+                        if data:
+                            try: evaluate(data.decode('utf-8').strip())  # Send the message to the parser
+                            except Exception as e:
+                                core().logger("error", "main", "main", f"Error evaluating message: {e}")
+                                core().logger("error", "main", "main", f"Message: {data.decode('utf-8').strip()}")
+                                continue
                 except socket.timeout:
                     core().logger("debug", "main", "main", "Socket timeout occurred, checking stop flag.")
                     continue  # Timeout occurred, check the stop flag again
