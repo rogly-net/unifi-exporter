@@ -98,7 +98,8 @@ def evaluate(message):
         
         elif result is False:
             failure_count += 1
-            core().logger("debug", "main", "evaluate", "Syslog message parsing failed.")
+            core().logger("error", "main", "evaluate", "Syslog message parsing failed.")
+            core().logger("error", "main", "evaluate", f"Message: {message}")
 
     elif cef_header:
         core().logger("debug", "main", "evaluate", "Message identified as CEF format.")
@@ -109,7 +110,8 @@ def evaluate(message):
             core().logger("debug", "main", "evaluate", "CEF message parsed successfully.")
         elif result is False:
             failure_count += 1
-            core().logger("debug", "main", "evaluate", "CEF message parsing failed.")
+            core().logger("error", "main", "evaluate", "CEF message parsing failed.")
+            core().logger("error", "main", "evaluate", f"Message: {message}")
 
     else:
         # Skip empty messages silently
@@ -198,17 +200,15 @@ def main():
                 sock.settimeout(1)  # Set a timeout in seconds to periodically check the stop flag
                 try:
                     data, addr = sock.recvfrom(1024)  # Buffer size of 1024 bytes
-                    core().logger("debug", "main", "main", f"Received data from {addr}: {data}")
-                    if data:
-                        # with open("config/raw.log", "a") as raw_log:
-                        #     raw_log.write(data.decode('utf-8').strip() + "\n")
-                        try: evaluate(data.decode('utf-8').strip())  # Send the message to the parser
-                        except Exception as e:
-                            core().logger("error", "main", "main", f"Error evaluating message: {e}")
-                            core().logger("error", "main", "main", f"Message: {data.decode('utf-8').strip()}")
-                            continue
+                    if data != b'\x00':
+                        core().logger("debug", "main", "main", f"Received data from {addr}: {data}")
+                        if data:
+                            try: evaluate(data.decode('utf-8').strip())  # Send the message to the parser
+                            except Exception as e:
+                                core().logger("error", "main", "main", f"Error evaluating message: {e}")
+                                core().logger("error", "main", "main", f"Message: {data.decode('utf-8').strip()}")
+                                continue
                 except socket.timeout:
-                    core().logger("debug", "main", "main", "Socket timeout occurred, checking stop flag.")
                     continue  # Timeout occurred, check the stop flag again
         except KeyboardInterrupt:
             core().logger("critical", "main", "main", "Application interrupted by user.")

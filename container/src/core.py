@@ -689,7 +689,7 @@ class LokiExporter:
             Core().logger("error", "loki-exporter", "cache_dns", f"Error resolving hostname '{self.hostname}': {e}")
             return None
         
-    def export(self, record: dict, labels: dict, timestamp: str, cached_ip: str, retry: bool = False) -> tuple:
+    def export(self, record: dict, labels: dict, timestamp: str, cached_ip: str = None, retry: bool = False) -> tuple:
         """
         Exports a log record to Loki.
 
@@ -742,6 +742,7 @@ class LokiExporter:
                     response = requests.post(f"{self.prefix}://{cached_ip}:{self.port}/loki/api/v1/push", json=payload)
                     if response.status_code != 204:
                         Core().logger("error", "loki-exporter", "export", f"Error exporting log to Loki: {response.status_code}")
+                        Core().logger("error", "loki-exporter", "export", f"Payload: {payload}")
                         return cached_ip, False
                     else:
                         return cached_ip, True
