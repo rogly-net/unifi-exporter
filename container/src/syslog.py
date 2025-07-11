@@ -437,7 +437,7 @@ class Syslog:
             timestamp = "unknown"
         
         # Extract the hostname from the message
-        if timestamp:
+        if timestamp != "unknown":
             hostname = self.core.extract(timestamp.cleaned, r"(^\S+)\s", 1)
             self.core.logger("debug", "syslog", "parse", f"Extracted hostname: {hostname.value if hostname else 'None'}")
         else:
@@ -468,7 +468,12 @@ class Syslog:
                 log = self.generic(hostname.cleaned)
                 if log:
                     self.core.logger("debug", "syslog", "parse", f"Parsed generic log: {log.record}, {log.labels}")
-                    cached_ip, result = self.loki.export(log.record, log.labels, timestamp.value, cached_ip)
+                    
+                    if timestamp != "unknown":
+                        cached_ip, result = self.loki.export(log.record, log.labels, timestamp.value, cached_ip)
+                    else:
+                        cached_ip, result = self.loki.export(log.record, log.labels, timestamp, cached_ip)
+                    
                     self.core.logger("debug", "syslog", "parse", f"Export status: {'Success' if result else 'Failure'}")
                     return cached_ip, result
                 else:
