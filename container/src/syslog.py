@@ -429,15 +429,11 @@ class Syslog:
             return cached_ip, False
         
         # Extract the timestamp from the message
-        try:
-            timestamp = self.core.extract(priority.cleaned, r"^([A-Z][a-z]{2} {1,2}\d{1,2} \d{2}:\d{2}:\d{2})", 1)
-            self.core.logger("debug", "syslog", "parse", f"Extracted timestamp: {timestamp.value if timestamp else 'None'}")
-        except Exception as e:
-            self.core.logger("error", "syslog", "parse", f"Error extracting timestamp: {e}")
-            timestamp = "unknown"
+        timestamp = self.core.extract(priority.cleaned, r"^([A-Z][a-z]{2} {1,2}\d{1,2} \d{2}:\d{2}:\d{2})", 1)
+        self.core.logger("debug", "syslog", "parse", f"Extracted timestamp: {timestamp.value if timestamp else None}")
         
         # Extract the hostname from the message
-        if timestamp != "unknown":
+        if timestamp:
             hostname = self.core.extract(timestamp.cleaned, r"(^\S+)\s", 1)
             self.core.logger("debug", "syslog", "parse", f"Extracted hostname: {hostname.value if hostname else 'None'}")
         else:
