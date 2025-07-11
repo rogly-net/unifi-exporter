@@ -25,7 +25,7 @@
 //  Application Name: Unifi Exporter                                        //
 //  Application Author: Rogly                                               //
 //  Application Repository: https://github.com/rogly-net/unifi-exporter     //
-//  Application Version: v1.0.1                                             //
+//  Application Version: v1.0.2                                             //
 //  Application Description: A UniFi specific syslog parser and exporter.   //  
 //                                                                          //
 //////////////////////////////////////////////////////////////////////////////

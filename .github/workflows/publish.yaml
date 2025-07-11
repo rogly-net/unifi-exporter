@@ -1,5 +1,4 @@
-name: Publish Docker image
-
+name: Prod Build
 on:
   push:
     branches:
