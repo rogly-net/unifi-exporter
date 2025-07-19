@@ -608,9 +608,9 @@ class LokiExporter:
         self._author = "Rogly"
         self._email = "rogly@rogly.net"
         self.url = os.getenv("LOKI_URL", "http://localhost:3100")
-        self.hostname = re.match(r"http[s]?://([^:/]+)", self.url).group(1)
+        self.hostname = re.match(r"http[s]?://([^:/]+)", self.url).group(1) if self.url != "TESTING" else self.url
         self.port = int(re.search(r":(\d+)", self.url).group(1)) if ":" in self.url else None
-        self.prefix = re.match(r"(http[s]?)://", self.url).group(1) if self.url else None
+        self.prefix = re.match(r"(http[s]?)://", self.url).group(1) if self.url != "TESTING" else None
     
     def payload(self, record: dict, labels: dict) -> dict:
         """
@@ -681,6 +681,9 @@ class LokiExporter:
         Returns:
             str: The resolved IP address if successful, or None if the resolution fails.
         """
+        if self.url == "TESTING":
+            return "127.0.0.1"
+
         try:
             ip = socket.gethostbyname(self.hostname)
             Core().logger("informational", "loki-exporter", "cache_dns", f"Cached IP: {ip}")
@@ -737,9 +740,15 @@ class LokiExporter:
         
         # Send the payload to Loki
         if payload:
+            if os.getenv("LOKI_URL") == "TESTING":
+                with open("testing/output.json", "a") as output_file:
+                    output_file.write(json.dumps(payload, indent=4))
+                    return cached_ip, True
+
             if self.connection(cached_ip):
-                try:
+                try:    
                     response = requests.post(f"{self.prefix}://{cached_ip}:{self.port}/loki/api/v1/push", json=payload)
+
                     if response.status_code != 204:
                         Core().logger("error", "loki-exporter", "export", f"Error exporting log to Loki: {response.status_code}")
                         Core().logger("error", "loki-exporter", "export", f"Payload: {payload}")
