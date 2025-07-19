@@ -108,29 +108,46 @@ class Cef:
                     self.core.logger("debug", "cef", "fields", f"Mapped label {field_name}: {fields[i]}")
 
                 if i == 7:
-                    # extension segment → record["message"]
-                    record["message"] = fields[i]
-                    self.core.logger("debug", "cef", "fields", f"Mapped message body: {fields[i]}")
+                    # Load the cef label fields from the file
+                    try:
+                        with open("config/cef_label_fields.list", "r") as label_fields_list:
+                            label_fields = label_fields_list.read().splitlines()
+                    except FileNotFoundError as e:
+                        self.core.logger("critical", "cef", "fields", f"Label fields file not found: {e}")
+                        exit(1)
+                    except Exception as e:
+                        self.core.logger("critical", "cef", "fields", f"Error loading label fields: {e}")
+                        exit(1)
+                    
+                    # Parse last field with key-value pairs
+                    try: 
+                        pattern = re.compile(r'(\S+?)=(.*?)(?=\s\S+=|$)')
+                        pairs = dict(pattern.findall(fields[i]))
+                    except Exception as e:
+                        self.core.logger("error", "cef", "fields", f"Error parsing fields into key-value pairs: {e}")
+
+                    try:
+                        for key, value in pairs.items():
+                            stripped = re.sub(r'UNIFI', "", key)
+                            words = re.findall(r'[A-Z]?[a-z]+', stripped)
+                            new_key = "_".join(words).lower()
+                            if new_key in label_fields:
+                                labels[new_key] = value
+                            else:
+                                if new_key == "msg":
+                                    record["message"] = value
+                                elif new_key == "src":
+                                    record["source_ip"] = value
+                                else:
+                                    record[new_key] = value
+                    except Exception as e:
+                        self.core.logger("error", "cef", "fields", f"Error processing labels and records: {e}")
 
                 if field_name == "severity":
                     # convert numeric severity to human level
                     labels["level"] = self.map.severity("cef", int(fields[i]))
                     self.core.logger("debug", "cef", "fields", f"Converted severity {fields[i]} to level: {labels['level']}")
 
-        # Extract the 'msg=' part from the extension
-        if record.get("message"):
-            match = self.core.extract(record["message"], r"msg=(.*)", 1)
-            self.core.logger("debug", "cef", "fields", f"Extracted message: {match.value if match.value else 'None'}")
-            
-            if match.value:
-                record["message"] = match.value
-            else:
-                self.core.logger("error", "cef", "fields",
-                                f"Message extraction failed: {record['message']}")
-                return
-        else:
-            self.core.logger("error", "cef", "fields", f"No message field found in: {message}")
-            return
         return self.Fields(record, labels)
 
     def parse(self, message: str, cached_ip: str) -> tuple:
