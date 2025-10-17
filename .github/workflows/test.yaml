@@ -41,11 +41,14 @@ jobs:
       - name: Extract Metadata
         id: meta
         uses: docker/metadata-action@v5
+        env: 
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
         with:
+          flavor: |
+            latest=true
           images: ${{ secrets.HARBOR_REGISTRY }}/homelab/${{ steps.repo_name.outputs.value }}
           tags: |
-            type=raw,value=${{ steps.sha_short.outputs.value }}
-            type=raw,value=latest
+            type=sha
 
       - name: Build and Push Docker image
         id: build
@@ -53,7 +56,9 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64
+          pull: true
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          provenance: mode=max
+          annotations: ${{ steps.meta.outputs.annotations }}
+          labels: ${{ steps.meta.outputs.labels }}
           sbom: true
