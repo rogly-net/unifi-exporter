@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    runs-on: arc-runner-set
+    runs-on: github-runner-set
     permissions:
       contents: read
       id-token: write
